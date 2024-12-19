@@ -12,7 +12,7 @@ export const register = async (req, res, next) => {
     const { error, value } = registerValidator.validate(req.body);
 
     if (error) {
-      res.status(422).json({
+      return res.status(422).json({
         status: "error",
         message: "Validation error",
         details: error.details,
@@ -22,7 +22,7 @@ export const register = async (req, res, next) => {
     const user = await userModel.findOne({ email: value.email });
 
     if (user) {
-      res.status(409).json({
+      return res.status(409).json({
         message: "error",
         status: "User already exist",
       });
@@ -39,7 +39,7 @@ export const register = async (req, res, next) => {
       expiresIn: "24h",
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       status: "success",
       message: "User registered successfully",
       accessToken: token,
@@ -53,7 +53,7 @@ export const login = async (req, res, next) => {
   try {
     const { error, value } = loginValidator.validate(req.body);
     if (error) {
-      res.status(422).json({
+      return res.status(422).json({
         status: "error",
         message: "validation error",
         details: error.details,
@@ -61,7 +61,7 @@ export const login = async (req, res, next) => {
     }
     const user = await userModel.findOne({ email: value.email });
     if (!user) {
-      res.status(404).json({
+      return res.status(404).json({
         status: "error",
         message: "Invalid Credentials",
         details: error.details,
@@ -69,7 +69,7 @@ export const login = async (req, res, next) => {
     }
     const corrctPassword = bcrypt.compare(value.password, user.password);
     if (!corrctPassword) {
-      res.status(404).json({
+      return res.status(404).json({
         status: "error",
         message: "Invalid Credentials",
         details: error.details,
@@ -106,7 +106,7 @@ export const deleteProfile = async (req, res, next) => {
   try {
     const deleteUser = await userModel.findByIdAndDelete(req.auth.id);
     if (!deleteUser) {
-      res.status(404).json({
+      return res.status(404).json({
         status: "error",
         message: "User Not found",
       });
@@ -128,10 +128,10 @@ export const updateProfile = async (req, res, next) => {
     const updateUser = await userModel.findByIdAndUpdate(
       req.auth.id,
       updateData,
-      { new: true, select: "-password", select: "-email" }
+      { new: true, select: "-password -email" }
     );
     if (!updateUser) {
-      res.status(404).json({
+      return res.status(404).json({
         status: "error",
         message: "User Not found",
       });
@@ -146,3 +146,70 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+export const changeEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email is required.",
+      });
+    }
+
+    const updateEmail = await userModel.findByIdAndUpdate(req.auth.id, { email }, {
+      new: true,
+      select: "-password -firstName -lastName",
+    });
+    if (!updateEmail) {
+      return res.status(404).json({
+        status: "error",
+        message: "User Not found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      message: "User email updated successfully",
+      details: updateEmail,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        status: "error",
+        message: "Old password and new password are required.",
+      });
+    }
+    const user = await userModel.findById(req.auth.id);
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found.",
+      });
+    }
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        status: "error",
+        message: "Old password is incorrect.",
+      });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
