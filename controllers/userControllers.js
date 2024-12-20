@@ -5,6 +5,8 @@ import {
 } from "../validators/userValidators.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { mailTransporter } from "../utils/mail.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -157,10 +159,14 @@ export const changeEmail = async (req, res, next) => {
       });
     }
 
-    const updateEmail = await userModel.findByIdAndUpdate(req.auth.id, { email }, {
-      new: true,
-      select: "-password -firstName -lastName",
-    });
+    const updateEmail = await userModel.findByIdAndUpdate(
+      req.auth.id,
+      { email },
+      {
+        new: true,
+        select: "-password -firstName -lastName",
+      }
+    );
     if (!updateEmail) {
       return res.status(404).json({
         status: "error",
@@ -208,6 +214,89 @@ export const changePassword = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       message: "Password updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const otpStore = new Map(); // Key: email, Value: { otp, otpExpiry }
+
+
+export const generateOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email is required.",
+      });
+    }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found.",
+      });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+
+    otpStore.set(email, { otp, otpExpiry });
+    console.log(user)
+    
+    await mailTransporter.sendMail({
+      from: "Samekh <bboaduboateng2000@gmail.com>",
+      to: user.email,
+      subject: "Samekh Account Password Reset",
+      text: `Your password reset code is ${otp}. It expires in 10 minutes.`
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "OTP sent successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const verifyOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email and OTP are required.",
+      });
+    }
+
+    const storedOTP = otpStore.get(email);
+    if (!storedOTP) {
+      return res.status(400).json({
+        status: "error",
+        message: "OTP not found or expired.",
+      });
+    }
+
+    if (storedOTP.otp !== otp || storedOTP.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid or expired OTP.",
+      });
+    }
+
+    // OTP verified; clear it from memory
+    otpStore.delete(email);
+
+    res.status(200).json({
+      status: "success",
+      message: "OTP verified successfully. You can now reset your password.",
     });
   } catch (error) {
     next(error);
