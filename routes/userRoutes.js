@@ -4,6 +4,7 @@ import {
   changePassword,
   deleteProfile,
   generateOTP,
+  getAllUsers,
   login,
   profile,
   register,
@@ -25,5 +26,6 @@ userRouter.patch("/update/password", isAuthenticated, changePassword);
 userRouter.post("/generateOTP", generateOTP);
 userRouter.post("/verifyOTP", verifyOTP);
 userRouter.post("/passwordReset", resetPassword);
+userRouter.get("/users",isAuthenticated, getAllUsers);
 
 export default userRouter;

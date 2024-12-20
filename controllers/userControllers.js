@@ -348,3 +348,22 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await userModel.find();
+    if (!users) {
+      return res.status(404).json({
+        status: "error",
+        message: "No users Found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      message: "Password reset successfully.",
+      details: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
