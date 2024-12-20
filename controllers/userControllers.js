@@ -222,7 +222,6 @@ export const changePassword = async (req, res, next) => {
 
 const otpStore = new Map(); // Key: email, Value: { otp, otpExpiry }
 
-
 export const generateOTP = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -246,13 +245,12 @@ export const generateOTP = async (req, res, next) => {
     const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
 
     otpStore.set(email, { otp, otpExpiry });
-    console.log(user)
-    
+
     await mailTransporter.sendMail({
       from: "Samekh <bboaduboateng2000@gmail.com>",
       to: user.email,
       subject: "Samekh Account Password Reset",
-      text: `Your password reset code is ${otp}. It expires in 10 minutes.`
+      text: `Your password reset code is ${otp}. It expires in 10 minutes.`,
     });
 
     res.status(200).json({
@@ -263,7 +261,6 @@ export const generateOTP = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const verifyOTP = async (req, res, next) => {
   try {
@@ -292,11 +289,60 @@ export const verifyOTP = async (req, res, next) => {
     }
 
     // OTP verified; clear it from memory
+    otpStore.set(`${email}_verified`, true);
     otpStore.delete(email);
 
     res.status(200).json({
       status: "success",
       message: "OTP verified successfully. You can now reset your password.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email and new password are required.",
+      });
+    }
+
+    const isVerified = otpStore.get(`${email}_verified`);
+    if (!isVerified) {
+      return res.status(403).json({
+        status: "error",
+        message: "OTP verification is required before resetting the password.",
+      });
+    }
+    otpStore.delete(`${email}_verified`);
+
+    // Find the user in the database
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found.",
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Clear the OTP verification flag
+    otpStore.delete(`${email}_verified`);
+
+    res.status(200).json({
+      status: "success",
+      message: "Password reset successfully.",
     });
   } catch (error) {
     next(error);

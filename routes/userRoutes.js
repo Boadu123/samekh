@@ -7,7 +7,7 @@ import {
   login,
   profile,
   register,
-  // resetPassword,
+  resetPassword,
   updateProfile,
   verifyOTP,
 } from "../controllers/userControllers.js";
@@ -24,6 +24,6 @@ userRouter.patch("/update/email", isAuthenticated, changeEmail);
 userRouter.patch("/update/password", isAuthenticated, changePassword);
 userRouter.post("/generateOTP", generateOTP);
 userRouter.post("/verifyOTP", verifyOTP);
-// userRouter.post("/passwordReset", resetPassword);
+userRouter.post("/passwordReset", resetPassword);
 
 export default userRouter;
