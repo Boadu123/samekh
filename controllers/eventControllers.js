@@ -94,7 +94,7 @@ export const updateEvent = async (req, res, next) => {
     if (!updateEvent) {
       return res.status(404).json({
         status: "error",
-        message: "No details to update",
+        message: "No Event found",
       });
     }
 
@@ -102,6 +102,28 @@ export const updateEvent = async (req, res, next) => {
       status: "success",
       message: "Event Updated Successfully",
       details: updatedEvent,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteEvent = async (req, res, next) => {
+  try {
+    const deletedEvent = await eventModel.findByIdAndDelete({
+      _id: req.params.id,
+      user: req.auth.id,
+    });
+    if (!deletedEvent) {
+      return res.status(404).json({
+        status: "error",
+        message: "Event not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Event Deleted successfully",
     });
   } catch (error) {
     next(error);
