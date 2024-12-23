@@ -19,12 +19,12 @@ export const AddEvent = async (req, res, next) => {
         details: error.details,
       });
     }
-    const loginUser = await userModel.findById(req.auth.id)
-    if(!loginUser){
+    const loginUser = await userModel.findById(req.auth.id);
+    if (!loginUser) {
       return res.status(404).json({
         status: "error",
-        message: "No user found"
-      })
+        message: "No user found",
+      });
     }
     const newEvent = await eventModel.create({
       ...value,
@@ -125,12 +125,12 @@ export const updateEvent = async (req, res, next) => {
 
 export const deleteEvent = async (req, res, next) => {
   try {
-    const loginUser = await userModel.findById(req.auth.id)
-    if(!loginUser){
+    const loginUser = await userModel.findById(req.auth.id);
+    if (!loginUser) {
       return res.status(404).json({
         status: "error",
-        message: "No user found"
-      })
+        message: "No user found",
+      });
     }
     const deletedEvent = await eventModel.findByIdAndDelete({
       _id: req.params.id,
