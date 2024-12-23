@@ -1,4 +1,6 @@
 import { eventModel } from "../models/eventModels.js";
+import { userModel } from "../models/userModels.js";
+import { mailTransporter } from "../utils/mail.js";
 import {
   addEventValidator,
   updateEventValidator,
@@ -17,10 +19,23 @@ export const AddEvent = async (req, res, next) => {
         details: error.details,
       });
     }
-
+    const loginUser = await userModel.findById(req.auth.id)
+    if(!loginUser){
+      return res.status(404).json({
+        status: "error",
+        message: "No user found"
+      })
+    }
     const newEvent = await eventModel.create({
       ...value,
       user: req.auth.id,
+    });
+
+    await mailTransporter.sendMail({
+      from: "Samekh <bboaduboateng2000@gmail.com>",
+      to: loginUser.email,
+      subject: "An event has been added to the Samekh website",
+      text: `The ${value.title} will coming of on ${value.date} so kindly take note.`,
     });
 
     res.status(201).json({
@@ -110,6 +125,13 @@ export const updateEvent = async (req, res, next) => {
 
 export const deleteEvent = async (req, res, next) => {
   try {
+    const loginUser = await userModel.findById(req.auth.id)
+    if(!loginUser){
+      return res.status(404).json({
+        status: "error",
+        message: "No user found"
+      })
+    }
     const deletedEvent = await eventModel.findByIdAndDelete({
       _id: req.params.id,
       user: req.auth.id,
@@ -120,6 +142,13 @@ export const deleteEvent = async (req, res, next) => {
         message: "Event not found",
       });
     }
+
+    await mailTransporter.sendMail({
+      from: "Samekh <bboaduboateng2000@gmail.com>",
+      to: loginUser.email,
+      subject: "Event Deletion",
+      text: `Your event ${deletedEvent.title} on ${deletedEvent.date} has been deleted. If you are not aware kindly Samekh website to retify`,
+    });
 
     res.status(200).json({
       status: "success",
