@@ -8,3 +8,11 @@ export const signUpVolunteertValidator = Joi.object({
   skills: Joi.string()
 });
 
+export const updateVolunteertValidator = Joi.object({
+  firstName: Joi.string(),
+  lastName: Joi.string(),
+  email: Joi.string().email(),
+  phone: Joi.string(),
+  skills: Joi.string()
+});
+

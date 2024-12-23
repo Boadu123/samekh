@@ -1,6 +1,6 @@
 import { volunteerModel } from "../models/volunteerModels.js";
 import { mailTransporter } from "../utils/mail.js";
-import { signUpVolunteertValidator } from "../validators/volunteerValidator.js";
+import { signUpVolunteertValidator, updateVolunteertValidator } from "../validators/volunteerValidator.js";
 
 export const signUpVolunteer = async (req, res, next) => {
   try {
@@ -100,6 +100,37 @@ export const deleteVolunteer = async (req, res, next) => {
       status: "success",
       message: "Volunteer removed sucessfully",
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateVolunteer = async (req, res, next) => {
+  try {
+    const { error, value } = updateVolunteertValidator.validate(req.body);
+    if (error) {
+      return res.status(422).json({
+        status: "error",
+        message: "Validation error",
+        details: error.details,
+      });
+    }
+    const updatedVolunteer = await volunteerModel.findByIdAndUpdate(
+      { _id: req.params.id },
+      value,
+      { new: true }
+    );
+    if (!updatedVolunteer) {
+      return res.status(404).json({
+        status: "error",
+        message: "Volunteer not found",
+      });
+    }
+    res.status(200).json({
+        status: "success",
+        message: "Volunteer Details updated",
+        details: updatedVolunteer
+    })
   } catch (error) {
     next(error);
   }
