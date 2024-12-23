@@ -1,13 +1,14 @@
 import { eventModel } from "../models/eventModels.js";
-import { addEventValidator } from "../validators/eventValidators.js";
+import {
+  addEventValidator,
+  updateEventValidator,
+} from "../validators/eventValidators.js";
 
 export const AddEvent = async (req, res, next) => {
   try {
     const { error, value } = addEventValidator.validate({
       ...req.body,
-      image: req?.files?.length
-        ? req.files.map((file) => file.filename)
-        : [],
+      image: req?.files?.length ? req.files.map((file) => file.filename) : [],
     });
     if (error) {
       return res.status(422).json({
@@ -70,3 +71,39 @@ export const getOneEvent = async (req, res, next) => {
   }
 };
 
+export const updateEvent = async (req, res, next) => {
+  try {
+    const { error, value } = updateEventValidator.validate({
+      ...req.body,
+      image: req?.files?.length ? req.files.map((file) => file.filename) : [],
+    });
+    if (error) {
+      return res.status(422).json({
+        status: "error",
+        message: "Validation error",
+        details: error.details,
+      });
+    }
+
+    const updatedEvent = await eventModel.findByIdAndUpdate(
+      { user: req.auth.id, _id: req.params.id },
+      value,
+      { new: true }
+    );
+
+    if (!updateEvent) {
+      return res.status(404).json({
+        status: "error",
+        message: "No details to update",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Event Updated Successfully",
+      details: updatedEvent,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
