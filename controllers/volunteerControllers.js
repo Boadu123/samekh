@@ -1,6 +1,9 @@
 import { volunteerModel } from "../models/volunteerModels.js";
 import { mailTransporter } from "../utils/mail.js";
-import { signUpVolunteertValidator, updateVolunteertValidator } from "../validators/volunteerValidator.js";
+import {
+  signUpVolunteertValidator,
+  updateVolunteertValidator,
+} from "../validators/volunteerValidator.js";
 
 export const signUpVolunteer = async (req, res, next) => {
   try {
@@ -127,10 +130,10 @@ export const updateVolunteer = async (req, res, next) => {
       });
     }
     res.status(200).json({
-        status: "success",
-        message: "Volunteer Details updated",
-        details: updatedVolunteer
-    })
+      status: "success",
+      message: "Volunteer Details updated",
+      details: updatedVolunteer,
+    });
   } catch (error) {
     next(error);
   }
