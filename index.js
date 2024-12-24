@@ -4,6 +4,7 @@ import cors from "cors";
 import userRouter from "./routes/userRoutes.js";
 import eventRouter from "./routes/eventRoutes.js";
 import volunteerRouter from "./routes/volunteerRoutes.js";
+import contactRouter from "./routes/contactRoutes.js";
 
 await mongoose
   .connect(process.env.MONGO_URI)
@@ -19,6 +20,7 @@ app.use(cors());
 app.use(userRouter);
 app.use(eventRouter);
 app.use(volunteerRouter);
+app.use(contactRouter);
 
 app.listen(3000, () => {
   console.log(`Server is running on port 3000`);
