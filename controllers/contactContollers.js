@@ -31,3 +31,78 @@ export const AddContact = async (req, res, next) => {
   }
 };
 
+export const getAllContact = async (req, res, next) => {
+  try {
+    const { filter = "{}", sort = "{}", limit = 200, skip = 0 } = req.query;
+    const contacts = await contactModel
+      .find(JSON.parse(filter))
+      .sort(JSON.parse(sort))
+      .limit(limit)
+      .skip(skip);
+    res.status(200).json({
+      status: "success",
+      message: "All messages are Available here",
+      details: contacts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOneContact = async (req, res, next) => {
+  try {
+    const contact = await contactModel.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({
+        status: "error",
+        message: "No Message found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      message: "Message details",
+      details: contact,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteContact = async (req, res, next) => {
+  try {
+    const deletedContact = await contactModel.findByIdAndDelete(req.params.id);
+    if (!deletedContact) {
+      return res.status(404).json({
+        status: "error",
+        message: "Message not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Event Deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAllContacts = async (req, res, next) => {
+    try {
+      const result = await contactModel.deleteMany({});
+      if (result.deletedCount === 0) {
+        return res.status(404).json({
+          status: "error",
+          message: "No Messages found to delete",
+        });
+      }
+  
+      res.status(200).json({
+        status: "success",
+        message: "All Messages deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+  
