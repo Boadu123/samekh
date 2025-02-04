@@ -5,6 +5,7 @@ import userRouter from "./routes/userRoutes.js";
 import eventRouter from "./routes/eventRoutes.js";
 import volunteerRouter from "./routes/volunteerRoutes.js";
 import contactRouter from "./routes/contactRoutes.js";
+import bodyParser from "body-parser";
 
 await mongoose
   .connect(process.env.MONGO_URI)
@@ -16,6 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(bodyParser.json());
 
 app.use(userRouter);
 app.use(eventRouter);

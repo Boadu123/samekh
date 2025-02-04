@@ -1,6 +1,8 @@
 import { contactModel } from "../models/contactModels.js";
 import { mailTransporter } from "../utils/mail.js";
 import { addContactValidator } from "../validators/contactValidators.js";
+import axios from 'axios';
+
 
 export const AddContact = async (req, res, next) => {
   try {
@@ -23,9 +25,9 @@ export const AddContact = async (req, res, next) => {
       ${value.message}`,
     });
     res.status(200).json({
-        status: "success",
-        message: "Message Submitted successfully"
-    })
+      status: "success",
+      message: "Message Submitted successfully",
+    });
   } catch (error) {
     next(error);
   }
@@ -88,21 +90,20 @@ export const deleteContact = async (req, res, next) => {
 };
 
 export const deleteAllContacts = async (req, res, next) => {
-    try {
-      const result = await contactModel.deleteMany({});
-      if (result.deletedCount === 0) {
-        return res.status(404).json({
-          status: "error",
-          message: "No Messages found to delete",
-        });
-      }
-  
-      res.status(200).json({
-        status: "success",
-        message: "All Messages deleted successfully",
+  try {
+    const result = await contactModel.deleteMany({});
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "No Messages found to delete",
       });
-    } catch (error) {
-      next(error);
     }
-  };
-  
+
+    res.status(200).json({
+      status: "success",
+      message: "All Messages deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
